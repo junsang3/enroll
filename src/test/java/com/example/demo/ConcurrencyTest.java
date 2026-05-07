@@ -9,6 +9,8 @@ import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.IntStream;
 
+import com.example.demo.course.Course;
+import com.example.demo.course.CourseRepository;
 import com.example.demo.student.Student;
 import com.example.demo.student.StudentRepository;
 import org.junit.jupiter.api.Test;
@@ -39,9 +41,9 @@ class ConcurrencyTest {
         List<Student> students = studentRepository.saveAll(IntStream.rangeClosed(1, 100)
                 .mapToObj(index -> new Student("학생" + index))
                 .toList());
-        Course course = courseRepository.save(
-                new Course("동시성 테스트 강좌", "김교수", 3, DayOfWeek.MONDAY, 1, 3, 1)
-        );
+        Course course = courseRepository.save(new Course(
+                "동시성 테스트 강좌", "김교수", 1, 3, DayOfWeek.MONDAY, 1, 3
+        ));
 
         ExecutorService executorService = Executors.newFixedThreadPool(100);
         CountDownLatch readyLatch = new CountDownLatch(100);
