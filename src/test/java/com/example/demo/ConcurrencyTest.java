@@ -4,21 +4,21 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import java.time.DayOfWeek;
 import java.util.List;
-import java.util.Queue;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.IntStream;
 
 import com.example.demo.course.Course;
 import com.example.demo.course.CourseRepository;
+import com.example.demo.enrollment.EnrollmentRepository;
+import com.example.demo.enrollment.EnrollmentRequest;
+import com.example.demo.enrollment.EnrollmentService;
 import com.example.demo.student.Student;
 import com.example.demo.student.StudentRepository;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.context.annotation.Import;
-import org.springframework.http.HttpStatus;
-import org.springframework.web.server.ResponseStatusException;
 
 @SpringBootTest
 @Import(TestcontainersConfiguration.class)

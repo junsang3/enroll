@@ -1,3 +1,7 @@
 spring:
   application:
     name: demo3
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: true

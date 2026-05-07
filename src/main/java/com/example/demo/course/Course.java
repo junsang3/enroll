@@ -17,7 +17,7 @@ public class Course {
     private Long id;
 
     @Column(nullable = false)
-    private String title;
+    private String name;
 
     @Column(nullable = false)
     private String professor;
@@ -41,8 +41,8 @@ public class Course {
     protected Course() {
     }
 
-    public Course(String title, String professor, int capacity, int credit, DayOfWeek dayOfWeek, int startPeriod, int endPeriod) {
-        this.title = title;
+    public Course(String name, String professor, int capacity, int credit, DayOfWeek dayOfWeek, int startPeriod, int endPeriod) {
+        this.name = name;
         this.professor = professor;
         this.capacity = capacity;
         this.credit = credit;
@@ -55,8 +55,8 @@ public class Course {
         return id;
     }
 
-    public String getTitle() {
-        return title;
+    public String getName() {
+        return name;
     }
 
     public String getProfessor() {
