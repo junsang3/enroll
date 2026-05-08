@@ -4,9 +4,9 @@ import com.example.demo.course.Course;
 import com.example.demo.course.CourseRepository;
 import com.example.demo.student.Student;
 import com.example.demo.student.StudentRepository;
-import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
 @Service
@@ -22,10 +22,11 @@ public class EnrollmentService {
         this.courseRepository = courseRepository;
     }
 
+    @Transactional
     public EnrollmentResponse enroll(EnrollmentRequest request) {
         Student student = studentRepository.findById(request.studentId())
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "학생을 찾을 수 없습니다"));
-        Course course = courseRepository.findById(request.courseId())
+        Course course = courseRepository.findByIdForUpdate(request.courseId())
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "강좌를 찾을 수 없습니다"));
 
         if (enrollmentRepository.countByCourseId(course.getId()) >= course.getCapacity()) {
