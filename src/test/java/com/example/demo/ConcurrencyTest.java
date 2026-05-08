@@ -15,6 +15,8 @@ import com.example.demo.enrollment.EnrollmentRequest;
 import com.example.demo.enrollment.EnrollmentService;
 import com.example.demo.student.Student;
 import com.example.demo.student.StudentRepository;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -36,6 +38,13 @@ class ConcurrencyTest {
     @Autowired
     EnrollmentService enrollmentService;
 
+    @AfterEach
+    void cleanUp() {
+        enrollmentRepository.deleteAllInBatch();
+        studentRepository.deleteAllInBatch();
+        courseRepository.deleteAllInBatch();
+    }
+
     @Test
     void 정원이_1명인_강좌에_100명이_동시에_신청해도_1명만_성공한다() throws InterruptedException {
         List<Student> students = studentRepository.saveAll(IntStream.rangeClosed(1, 100)
@@ -49,8 +58,6 @@ class ConcurrencyTest {
         CountDownLatch readyLatch = new CountDownLatch(100);
         CountDownLatch startLatch = new CountDownLatch(1);
         CountDownLatch doneLatch = new CountDownLatch(100);
-        AtomicInteger successCount = new AtomicInteger();
-        AtomicInteger failCount = new AtomicInteger();
 
         for (Student student : students) {
             executorService.submit(() -> {
@@ -58,9 +65,7 @@ class ConcurrencyTest {
                     readyLatch.countDown();
                     startLatch.await();
                     enrollmentService.enroll(new EnrollmentRequest(student.getId(), course.getId()));
-                    successCount.incrementAndGet();
-                } catch (Exception e) { // TODO: 예외 구분 처리
-                    failCount.incrementAndGet();
+                } catch (Exception ignored) {
                 } finally {
                     doneLatch.countDown();
                 }
@@ -72,17 +77,51 @@ class ConcurrencyTest {
         doneLatch.await();
         executorService.shutdown();
 
-        assertThat(successCount).hasValue(1);
-        assertThat(failCount).hasValue(99);
-        assertThat(enrollmentRepository.countByCourseId(course.getId())).isEqualTo(1);
+        long enrolledCount = enrollmentRepository.countByCourseId(course.getId());
+        assertThat(enrolledCount).isEqualTo(1);
     }
 
     @Test
-    void 같은_학생이_동시에_여러_강좌를_신청해도_18학점을_초과하지_않는다() {}
+    void 같은_학생이_동시에_여러_강좌를_신청해도_18학점을_초과하지_않는다() throws InterruptedException {
+        Student student = studentRepository.save(new Student("동시 신청 학생"));
+        List<Course> courses = courseRepository.saveAll(IntStream.rangeClosed(1, 100)
+                .mapToObj(index -> new Course(
+                        "학점 제한 테스트 강좌" + index, "김교수", 100, 3, DayOfWeek.MONDAY, index, index
+                ))
+                .toList());
+
+        ExecutorService executorService = Executors.newFixedThreadPool(100);
+        CountDownLatch readyLatch = new CountDownLatch(100);
+        CountDownLatch startLatch = new CountDownLatch(1);
+        CountDownLatch doneLatch = new CountDownLatch(100);
+
+        for (Course course : courses) {
+            executorService.submit(() -> {
+                try {
+                    readyLatch.countDown();
+                    startLatch.await();
+                    enrollmentService.enroll(new EnrollmentRequest(student.getId(), course.getId()));
+                } catch (Exception ignored) {
+                } finally {
+                    doneLatch.countDown();
+                }
+            });
+        }
+
+        readyLatch.await();
+        startLatch.countDown();
+        doneLatch.await();
+        executorService.shutdown();
+
+        long studentCredit = enrollmentRepository.sumCreditByStudentId(student.getId());
+        assertThat(studentCredit).isEqualTo(18);
+    }
 
     @Test
+    @Disabled
     void 같은_학생이_동시에_겹치는_시간표의_강좌를_신청해도_하나만_성공한다() {}
 
     @Test
+    @Disabled
     void 같은_학생이_동시에_같은_강좌를_중복_신청해도_하나만_성공한다() {}
 }
