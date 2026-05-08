@@ -24,10 +24,10 @@ public class EnrollmentService {
 
     @Transactional
     public EnrollmentResponse enroll(EnrollmentRequest request) {
-        Student student = studentRepository.findById(request.studentId())
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "학생을 찾을 수 없습니다"));
         Course course = courseRepository.findByIdForUpdate(request.courseId())
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "강좌를 찾을 수 없습니다"));
+        Student student = studentRepository.findById(request.studentId())
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "학생을 찾을 수 없습니다"));
 
         if (enrollmentRepository.countByCourseId(course.getId()) >= course.getCapacity()) {
             throw new ResponseStatusException(HttpStatus.CONFLICT, "강좌 정원을 초과했습니다");
