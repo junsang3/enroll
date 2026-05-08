@@ -4,6 +4,7 @@ import com.example.demo.course.Course;
 import com.example.demo.course.CourseRepository;
 import com.example.demo.student.Student;
 import com.example.demo.student.StudentRepository;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -29,6 +30,10 @@ public class EnrollmentService {
         Course course = courseRepository.findByIdForUpdate(request.courseId())
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "강좌를 찾을 수 없습니다"));
 
+//        if (enrollmentRepository.existsByStudentIdAndCourseId(student.getId(), course.getId())) {
+//            throw new ResponseStatusException(HttpStatus.CONFLICT, "이미 신청한 강좌입니다");
+//        }
+
         long enrolledCount = enrollmentRepository.countByCourseId(course.getId());
         if (enrolledCount >= course.getCapacity()) {
             throw new ResponseStatusException(HttpStatus.CONFLICT, "강좌 정원을 초과했습니다");
@@ -39,7 +44,11 @@ public class EnrollmentService {
             throw new ResponseStatusException(HttpStatus.CONFLICT, "학기 최대 18학점을 초과했습니다");
         }
 
-        Enrollment enrollment = enrollmentRepository.save(new Enrollment(student, course));
-        return EnrollmentResponse.from(enrollment);
+        try {
+            Enrollment enrollment = enrollmentRepository.saveAndFlush(new Enrollment(student, course));
+            return EnrollmentResponse.from(enrollment);
+        } catch (DataIntegrityViolationException e) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "이미 신청한 강좌입니다", e);
+        }
     }
 }

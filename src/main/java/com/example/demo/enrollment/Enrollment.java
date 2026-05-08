@@ -13,6 +13,9 @@ import jakarta.persistence.Table;
 import jakarta.persistence.UniqueConstraint;
 
 @Entity
+@Table(uniqueConstraints = {
+        @UniqueConstraint(name = "uk_enrollment_student_course", columnNames = {"student_id", "course_id"})
+})
 public class Enrollment {
 
     @Id

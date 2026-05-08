@@ -66,6 +66,7 @@ class ConcurrencyTest {
                     startLatch.await();
                     enrollmentService.enroll(new EnrollmentRequest(student.getId(), course.getId()));
                 } catch (Exception ignored) {
+                    System.out.println(ignored);
                 } finally {
                     doneLatch.countDown();
                 }
@@ -102,6 +103,7 @@ class ConcurrencyTest {
                     startLatch.await();
                     enrollmentService.enroll(new EnrollmentRequest(student.getId(), course.getId()));
                 } catch (Exception ignored) {
+                    System.out.println(ignored);
                 } finally {
                     doneLatch.countDown();
                 }
@@ -122,6 +124,37 @@ class ConcurrencyTest {
     void 같은_학생이_동시에_겹치는_시간표의_강좌를_신청해도_하나만_성공한다() {}
 
     @Test
-    @Disabled
-    void 같은_학생이_동시에_같은_강좌를_중복_신청해도_하나만_성공한다() {}
+    void 같은_학생이_동시에_같은_강좌를_중복_신청해도_하나만_성공한다() throws InterruptedException {
+        Student student = studentRepository.save(new Student("중복 신청 학생"));
+        Course course = courseRepository.save(new Course(
+                "중복 신청 테스트 강좌", "김교수", 100, 3, DayOfWeek.MONDAY, 1, 3
+        ));
+
+        ExecutorService executorService = Executors.newFixedThreadPool(100);
+        CountDownLatch readyLatch = new CountDownLatch(100);
+        CountDownLatch startLatch = new CountDownLatch(1);
+        CountDownLatch doneLatch = new CountDownLatch(100);
+
+        for (int index = 0; index < 100; index++) {
+            executorService.submit(() -> {
+                try {
+                    readyLatch.countDown();
+                    startLatch.await();
+                    enrollmentService.enroll(new EnrollmentRequest(student.getId(), course.getId()));
+                } catch (Exception ignored) {
+                    System.out.println(ignored);
+                } finally {
+                    doneLatch.countDown();
+                }
+            });
+        }
+
+        readyLatch.await();
+        startLatch.countDown();
+        doneLatch.await();
+        executorService.shutdown();
+
+        long enrolledCount = enrollmentRepository.countByCourseId(course.getId());
+        assertThat(enrolledCount).isEqualTo(1);
+    }
 }
