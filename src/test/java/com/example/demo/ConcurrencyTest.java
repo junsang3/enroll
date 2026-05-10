@@ -5,7 +5,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 import java.time.DayOfWeek;
 import java.util.List;
 import java.util.concurrent.*;
-import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.IntStream;
 
 import com.example.demo.course.Course;
@@ -16,7 +15,6 @@ import com.example.demo.enrollment.EnrollmentService;
 import com.example.demo.student.Student;
 import com.example.demo.student.StudentRepository;
 import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -120,8 +118,42 @@ class ConcurrencyTest {
     }
 
     @Test
-    @Disabled
-    void 같은_학생이_동시에_겹치는_시간표의_강좌를_신청해도_하나만_성공한다() {}
+    void 같은_학생이_동시에_겹치는_시간표의_강좌를_신청해도_하나만_성공한다() throws InterruptedException {
+        Student student = studentRepository.save(new Student("시간표 충돌 학생"));
+        List<Course> courses = courseRepository.saveAll(List.of(
+                new Course("시간표 충돌 테스트 강좌1", "김교수", 100, 3, DayOfWeek.MONDAY, 1, 3),
+                new Course("시간표 충돌 테스트 강좌2", "이교수", 100, 3, DayOfWeek.MONDAY, 2, 4),
+                new Course("시간표 충돌 테스트 강좌3", "박교수", 100, 3, DayOfWeek.MONDAY, 3, 5)
+        ));
+
+        ExecutorService executorService = Executors.newFixedThreadPool(3);
+        CountDownLatch readyLatch = new CountDownLatch(3);
+        CountDownLatch startLatch = new CountDownLatch(1);
+        CountDownLatch doneLatch = new CountDownLatch(3);
+
+        for (Course course : courses) {
+            executorService.submit(() -> {
+                try {
+                    readyLatch.countDown();
+                    startLatch.await();
+                    enrollmentService.enroll(new EnrollmentRequest(student.getId(), course.getId()));
+                } catch (Exception ignored) {
+                    System.out.println(ignored);
+                } finally {
+                    doneLatch.countDown();
+                }
+            });
+        }
+
+        readyLatch.await();
+        startLatch.countDown();
+        doneLatch.await();
+        executorService.shutdown();
+
+        assertThat(enrollmentRepository.findAll())
+                .hasSize(1)
+                .allSatisfy(enrollment -> assertThat(enrollment.getStudent().getId()).isEqualTo(student.getId()));
+    }
 
     @Test
     void 같은_학생이_동시에_같은_강좌를_중복_신청해도_하나만_성공한다() throws InterruptedException {

@@ -30,10 +30,6 @@ public class EnrollmentService {
         Course course = courseRepository.findByIdForUpdate(request.courseId())
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "강좌를 찾을 수 없습니다"));
 
-//        if (enrollmentRepository.existsByStudentIdAndCourseId(student.getId(), course.getId())) {
-//            throw new ResponseStatusException(HttpStatus.CONFLICT, "이미 신청한 강좌입니다");
-//        }
-
         long enrolledCount = enrollmentRepository.countByCourseId(course.getId());
         if (enrolledCount >= course.getCapacity()) {
             throw new ResponseStatusException(HttpStatus.CONFLICT, "강좌 정원을 초과했습니다");
@@ -44,11 +40,17 @@ public class EnrollmentService {
             throw new ResponseStatusException(HttpStatus.CONFLICT, "학기 최대 18학점을 초과했습니다");
         }
 
+        if (enrollmentRepository.existsOverlappingSchedule(
+                student.getId(), course.getDayOfWeek(), course.getStartPeriod(), course.getEndPeriod()
+        )) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "같은 시간대에 진행되는 강좌는 동시에 신청할 수 없습니다");
+        }
+
         try {
             Enrollment enrollment = enrollmentRepository.saveAndFlush(new Enrollment(student, course));
             return EnrollmentResponse.from(enrollment);
         } catch (DataIntegrityViolationException e) {
-            throw new ResponseStatusException(HttpStatus.CONFLICT, "이미 신청한 강좌입니다", e);
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "이미 신청한 강좌입니다");
         }
     }
 }
