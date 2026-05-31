@@ -4,6 +4,7 @@ import com.example.demo.course.Course;
 import com.example.demo.course.CourseRepository;
 import com.example.demo.student.Student;
 import com.example.demo.student.StudentRepository;
+import java.util.List;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
@@ -55,15 +56,21 @@ public class EnrollmentService {
     }
 
     @Transactional
-    public void cancel(EnrollmentRequest request) {
-        Student student = studentRepository.findByIdForUpdate(request.studentId())
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "학생을 찾을 수 없습니다"));
-        Course course = courseRepository.findByIdForUpdate(request.courseId())
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "강좌를 찾을 수 없습니다"));
-
-        Enrollment enrollment = enrollmentRepository.findByStudentIdAndCourseId(student.getId(), course.getId())
+    public void cancel(Long enrollmentId) {
+        Enrollment enrollment = enrollmentRepository.findById(enrollmentId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "수강신청 내역을 찾을 수 없습니다"));
 
         enrollmentRepository.delete(enrollment);
+    }
+
+    @Transactional(readOnly = true)
+    public List<EnrollmentResponse> findSchedule(Long studentId) {
+        if (!studentRepository.existsById(studentId)) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "학생을 찾을 수 없습니다");
+        }
+
+        return enrollmentRepository.findScheduleByStudentId(studentId).stream()
+                .map(EnrollmentResponse::from)
+                .toList();
     }
 }
