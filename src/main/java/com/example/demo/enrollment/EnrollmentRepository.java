@@ -4,9 +4,12 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 
 import java.time.DayOfWeek;
+import java.util.Optional;
 
 public interface EnrollmentRepository extends JpaRepository<Enrollment, Long> {
     long countByCourseId(Long courseId);
+
+    Optional<Enrollment> findByStudentIdAndCourseId(Long studentId, Long courseId);
 
     @Query("""
             select coalesce(sum(c.credit), 0)

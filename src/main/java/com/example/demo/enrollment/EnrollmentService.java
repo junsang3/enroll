@@ -53,4 +53,17 @@ public class EnrollmentService {
             throw new ResponseStatusException(HttpStatus.CONFLICT, "이미 신청한 강좌입니다");
         }
     }
+
+    @Transactional
+    public void cancel(EnrollmentRequest request) {
+        Student student = studentRepository.findByIdForUpdate(request.studentId())
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "학생을 찾을 수 없습니다"));
+        Course course = courseRepository.findByIdForUpdate(request.courseId())
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "강좌를 찾을 수 없습니다"));
+
+        Enrollment enrollment = enrollmentRepository.findByStudentIdAndCourseId(student.getId(), course.getId())
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "수강신청 내역을 찾을 수 없습니다"));
+
+        enrollmentRepository.delete(enrollment);
+    }
 }
