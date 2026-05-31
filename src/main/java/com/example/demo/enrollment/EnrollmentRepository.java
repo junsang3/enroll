@@ -8,6 +8,10 @@ import org.springframework.data.jpa.repository.Query;
 public interface EnrollmentRepository extends JpaRepository<Enrollment, Long> {
     long countByCourseId(Long courseId);
 
+    boolean existsByStudentId(Long studentId);
+
+    boolean existsByCourseId(Long courseId);
+
     @Query("""
             select e
             from Enrollment e
