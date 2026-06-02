@@ -4,4 +4,8 @@ spring:
   jpa:
     hibernate:
       ddl-auto: update
-#    show-sql: true
+    open-in-view: false
+    show-sql: false
+  web:
+    error:
+      include-message: always # 에러 메시지 응답포함
