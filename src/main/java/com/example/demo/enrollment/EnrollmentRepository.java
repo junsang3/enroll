@@ -2,6 +2,7 @@ package com.example.demo.enrollment;
 
 import java.time.DayOfWeek;
 import java.util.List;
+import java.util.Optional;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 
@@ -11,6 +12,10 @@ public interface EnrollmentRepository extends JpaRepository<Enrollment, Long> {
     boolean existsByStudentId(Long studentId);
 
     boolean existsByCourseId(Long courseId);
+
+    boolean existsByStudentIdAndCourseId(Long studentId, Long courseId);
+
+    Optional<Enrollment> findByStudentIdAndCourseId(Long studentId, Long courseId);
 
     @Query("""
             select e

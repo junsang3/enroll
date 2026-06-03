@@ -64,4 +64,10 @@ public class StudentController {
     public List<EnrollmentResponse> findSchedule(@PathVariable Long studentId) {
         return enrollmentService.findSchedule(studentId);
     }
+
+    @DeleteMapping("/{studentId}/courses/{courseId}")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void cancelEnrollment(@PathVariable Long studentId, @PathVariable Long courseId) {
+        enrollmentService.cancel(studentId, courseId);
+    }
 }

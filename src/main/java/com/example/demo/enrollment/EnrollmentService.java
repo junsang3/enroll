@@ -56,8 +56,8 @@ public class EnrollmentService {
     }
 
     @Transactional
-    public void cancel(Long enrollmentId) {
-        Enrollment enrollment = enrollmentRepository.findById(enrollmentId)
+    public void cancel(Long studentId, Long courseId) {
+        Enrollment enrollment = enrollmentRepository.findByStudentIdAndCourseId(studentId, courseId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "수강신청 내역을 찾을 수 없습니다"));
 
         enrollmentRepository.delete(enrollment);
