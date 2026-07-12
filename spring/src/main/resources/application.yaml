@@ -1,0 +1,28 @@
+spring:
+  application:
+    name: enroll
+  datasource:
+    hikari:
+      maximum-pool-size: 20
+#      maximum-pool-size: 50
+  jpa:
+    hibernate:
+      ddl-auto: update
+#      ddl-auto: create
+#    show-sql: true
+    open-in-view: false
+  web:
+    error:
+      include-message: always
+      include-binding-errors: always
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,prometheus
+  metrics:
+    tags:
+      application: ${spring.application.name}
+    distribution:
+      percentiles-histogram:
+        http.server.requests: true
