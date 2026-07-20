@@ -16,7 +16,7 @@ import java.util.stream.IntStream;
 @Configuration
 public class DataInitializer {
 
-    @Bean
+//    @Bean
     CommandLineRunner initData(StudentRepository studentRepository, CourseRepository courseRepository) {
         return args -> {
             if (studentRepository.count() == 0) {
@@ -37,6 +37,20 @@ public class DataInitializer {
                                 3))
                         .toList());
             }
+        };
+    }
+
+    @Bean
+    CommandLineRunner initData2(StudentRepository studentRepository, CourseRepository courseRepository) {
+        return args -> {
+            if (studentRepository.count() > 0) return;
+
+            studentRepository.saveAll(IntStream.rangeClosed(1, 10000)
+                    .mapToObj(index -> new Student("학생" + index))
+                    .toList());
+            courseRepository.save(new Course(
+                    "강좌1", "교수1", 10000, 3, DayOfWeek.MONDAY, 1, 1
+            ));
         };
     }
 }
