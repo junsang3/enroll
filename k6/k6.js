@@ -3,7 +3,7 @@ import { check } from 'k6';
 import { Counter } from 'k6/metrics';
 
 export const options = {
-  vus: 500,
+  vus: 100,
   duration: '30s',
 };
 
@@ -12,11 +12,13 @@ const conflict = new Counter('conflict');
 const unexpected = new Counter('unexpected');
 
 export default function () {
-  const studentId = Math.floor(Math.random() * 10000) + 1;
-  const courseId = Math.floor(Math.random() * 500) + 1;
+  // const courseId = Math.floor(Math.random() * 500) + 1;
+  // const studentId = Math.floor(Math.random() * 10000) + 1;
+  const studentId = (__ITER * 100 + __VU) % 10000 + 1;
+  const courseId = 1;
 
   const res = http.post(
-    `http://172.30.1.66:8080/enrollments`,
+    `http://172.30.1.73:8080/enrollments`,
     JSON.stringify({ studentId, courseId }),
     { headers: { 'Content-Type': 'application/json' } },
   );
