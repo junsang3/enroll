@@ -6,8 +6,15 @@ import jakarta.persistence.*;
 
 @Entity
 @Table(
+        indexes = {
+                @Index(
+                        name = "idx_enrollment_course_id",
+                        columnList = "course_id"
+                )
+        },
         uniqueConstraints = {
                 @UniqueConstraint(
+                        name = "uk_enrollment_student_course",
                         columnNames = {"student_id", "course_id"}
                 )
         }
@@ -31,9 +38,7 @@ public class Enrollment {
 
     public Enrollment(Student student, Course course) {
         this.student = student;
-        student.getEnrollments().add(this);
         this.course = course;
-        course.getEnrollments().add(this);
     }
 
     public Long getId() {

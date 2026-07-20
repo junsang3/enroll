@@ -1,11 +1,8 @@
 package com.example.demo1.course;
 
-import com.example.demo1.enrollment.Enrollment;
 import jakarta.persistence.*;
 
 import java.time.DayOfWeek;
-import java.util.ArrayList;
-import java.util.List;
 
 @Entity
 public class Course {
@@ -36,9 +33,6 @@ public class Course {
     @Column(nullable = false)
     private int endPeriod;
 
-    @OneToMany(mappedBy = "course")
-    private List<Enrollment> enrollments = new ArrayList<>();
-
     protected Course() {
     }
 
@@ -60,12 +54,20 @@ public class Course {
         return credit;
     }
 
-    public List<Enrollment> getEnrollments() {
-        return enrollments;
+    public int getCapacity() {
+        return capacity;
     }
 
-    public boolean isFull() {
-        return enrollments.size() >= capacity;
+    public DayOfWeek getDayOfWeek() {
+        return dayOfWeek;
+    }
+
+    public int getStartPeriod() {
+        return startPeriod;
+    }
+
+    public int getEndPeriod() {
+        return endPeriod;
     }
 
     public boolean conflictsWith(Course other) {

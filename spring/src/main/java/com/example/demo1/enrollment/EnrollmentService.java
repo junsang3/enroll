@@ -32,13 +32,18 @@ public class EnrollmentService {
         Course course = courseRepository.findForUpdateById(courseId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "강좌를 찾을 수 없습니다"));
 
-        if (course.isFull()) {
+        if (enrollmentRepository.countByCourseId(courseId) >= course.getCapacity()) {
             throw new ResponseStatusException(HttpStatus.CONFLICT, "강좌 정원을 초과했습니다");
         }
-        if (student.getTotalCredits() + course.getCredit() > MAX_CREDITS) {
+        if (enrollmentRepository.sumCreditsByStudentId(studentId) + course.getCredit() > MAX_CREDITS) {
             throw new ResponseStatusException(HttpStatus.CONFLICT, "학기 최대 18학점을 초과했습니다");
         }
-        if (student.hasConflict(course)) {
+        if (enrollmentRepository.existsScheduleConflict(
+                studentId,
+                course.getDayOfWeek(),
+                course.getStartPeriod(),
+                course.getEndPeriod()
+        )) {
             throw new ResponseStatusException(HttpStatus.CONFLICT, "강좌 시간이 겹칩니다");
         }
 
